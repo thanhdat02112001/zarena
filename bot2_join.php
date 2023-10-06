@@ -1,8 +1,8 @@
 <?php
-function bot2_join()
+function bot2_join($board)
 {
     $ch = curl_init("https://api-zarena.zinza.com.vn/api/bots/29efe7ae-759b-40c1-baf7-db8b38dc3b31/join");
-    $data = ['boardId' => 1];
+    $data = ['boardId' => $board];
     $json = json_encode($data);
     
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(

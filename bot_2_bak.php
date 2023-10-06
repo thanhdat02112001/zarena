@@ -1,26 +1,23 @@
 <?php
-include "./bot_join.php";
-const ENERMIES = ["OMO2"];
-const BOARD = 1;
-bot1_join(BOARD);
+include "./bot2_join.php";
+const ENERMIES = ["Clawzy", "Tigzzy"];
+const BOARD = 8;
+bot2_join(BOARD);
+
 do {
     $coin_lists = [];
     $bot_position = [];
-    $enemies_position = [];
-    $base = "";
     $datas =  getData();
     
-    [$coin_lists, $bot_position, $base, $enemies_position] = getObjectPosition($datas['gameObjects']);
+    [$coin_lists, $bot_position, $base] = getObjectPosition($datas['gameObjects']);
     $target = caculateTarget($bot_position, $coin_lists);
-    if (!empty($base))
+    if ($base)
     {
         $target = implode(",", $base);
     }
     
     $move = caculateMove($bot_position, $target);
-    if (!enemyNearBy($enemies_position, $bot_position)) {
-        move($move);
-    }
+    move($move);
     usleep(800 * 1000);
 } while(true);
 
@@ -29,16 +26,6 @@ function caculateDistance($x1, $y1, $x2, $y2)
 {
     $distance = sqrt(pow($x2 - $x1, 2) + pow($y2 - $y1, 2));
     return $distance;
-}
-function enemyNearBy($enemies, $bot_position)
-{
-    foreach($enemies as $enemy)
-    {
-        if (caculateDistance($bot_position['x'], $bot_position['y'], $enemy['x'], $enemy['y']) == sqrt(2)){
-            return true;
-        }
-        return false;
-    }
 }
 
 function caculateTarget($bot_position, $coin_lists)
@@ -85,7 +72,7 @@ function caculateMove($current, $target)
 }
 function getData()
 {
-    $ch = curl_init("https://api-zarena.zinza.com.vn/api/boards/".BOARD);
+    $ch = curl_init("https://api-zarena.zinza.com.vn/api/boards/" . BOARD);
 
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Content-Type: application/json',
@@ -99,53 +86,32 @@ function getData()
 
 function getObjectPosition($gameObjects)
 {
-    $coins = [];
-    $bot = [];
-    $enemies = [];
-    $enemies_position = [];
-    $coins_position = [];
-    foreach($gameObjects as $object)
+    foreach ($gameObjects as $object)
     {
         if ($object['type'] == "CoinGameObject")
         {
-            $coins[] = $object;
+            $coin_lists[] = $object['position'];
         }
-        if ($object['type'] == "BotGameObject" && $object['properties']['name'] == 'OMO1' ) {
-            $bot = $object;
-        }
-        if ($object['type'] == "BotGameObject" && in_array($object['properties']['name'], ENERMIES) ){
-            $enemies[] = $object;
-            $coins[] = $object;
-        }
-    }
-    if ($bot) {
-        $current_point = $bot['properties']['coins'];
-        if ($current_point == $bot['properties']['inventorySize'])  {
-            $base = $bot['properties']['base'];
-        }
-        foreach ($coins as $coin)
+        if ($object['type'] == 'BotGameObject')
         {
-            if ($coin['type'] == 'CoinGameObject') {
-                if ($coin['properties']['points'] + $current_point > $bot['properties']['inventorySize']) {
-                    $key = array_search($coin, $coins);
-                    unset($coins[$key]);
+            if ($object['properties']['name'] == 'OMO2') {
+                $bot_position = $object['position'];
+                if ($object['properties']['coins'] >= 3)
+                {
+                    $base = $object['properties']['base'];
                 }
             }
-            $coins_position[] =$coin['position']; 
+            if(in_array($object['properties']['name'], ENERMIES)) {
+                $coin_lists[] = $object['position'];
+            }
         }
     }
-    foreach($enemies as $enemy)
-    {
-        $enemies_position[] = $enemy['position'];
-    }
-    
-    return [$coins_position, $bot['position'], $base, $enemies_position];
+    return [$coin_lists, $bot_position, $base];
 }
-
 
 function move($move)
 {
-$ch = curl_init("https://api-zarena.zinza.com.vn/api/bots/eb8f9599-b117-4ba1-8367-7bbe0b209ce5/move");
+$ch = curl_init("https://api-zarena.zinza.com.vn/api/bots/29efe7ae-759b-40c1-baf7-db8b38dc3b31/move");
 $data = ['direction' => $move];
 $json = json_encode($data);
 
@@ -155,7 +121,8 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-curl_exec($ch);
+$response = curl_exec($ch);
 curl_close($ch);
+var_dump($response);
 }
 ?>
