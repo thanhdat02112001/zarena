@@ -5,6 +5,6 @@ import fetch from "node-fetch";
 async function getBoardData() {
   const response = await fetch("https://api-zarena.zinza.com.vn/api/boards/1");
   const data = await response.json();
-  console.log(data.gameObjects);
+  console.log(data);
 }
 getBoardData();

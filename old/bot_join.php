@@ -15,4 +15,5 @@ function bot1_join($board) {
     curl_close($ch);
     var_dump($response);
 }
+bot1_join(1);
 ?>

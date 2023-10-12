@@ -1,8 +1,8 @@
 <?php
-include "./bot2_join.php";
-const ENERMIES = ["OMO1"];
-const BOARD = 1;
-bot2_join(BOARD);
+include "./bot_join.php";
+const ENERMIES = ["aka-01", "aka-02"];
+const BOARD = 12;
+bot1_join(BOARD);
 do {
     $coin_lists = [];
     $bot_position = [];
@@ -34,7 +34,8 @@ function enemyNearBy($enemies, $bot_position)
 {
     foreach($enemies as $enemy)
     {
-        if (caculateDistance($bot_position['x'], $bot_position['y'], $enemy['x'], $enemy['y']) == sqrt(2)){
+        $enemy_distance = caculateDistance($bot_position['x'], $bot_position['y'], $enemy['x'], $enemy['y']);
+        if ($enemy_distance == 2 || $enemy_distance == sqrt(2)){
             return true;
         }
         return false;
@@ -110,7 +111,7 @@ function getObjectPosition($gameObjects)
         {
             $coins[] = $object;
         }
-        if ($object['type'] == "BotGameObject" && $object['properties']['name'] == 'OMO2' ) {
+        if ($object['type'] == "BotGameObject" && $object['properties']['name'] == 'OMO1' ) {
             $bot = $object;
         }
         if ($object['type'] == "BotGameObject" && in_array($object['properties']['name'], ENERMIES) ){
@@ -129,6 +130,7 @@ function getObjectPosition($gameObjects)
                 if ($coin['properties']['points'] + $current_point > $bot['properties']['inventorySize']) {
                     $key = array_search($coin, $coins);
                     unset($coins[$key]);
+                    continue;
                 }
             }
             $coins_position[] =$coin['position']; 
@@ -145,7 +147,7 @@ function getObjectPosition($gameObjects)
 
 function move($move)
 {
-$ch = curl_init("https://api-zarena.zinza.com.vn/api/bots/29efe7ae-759b-40c1-baf7-db8b38dc3b31/move");
+$ch = curl_init("https://api-zarena.zinza.com.vn/api/bots/eb8f9599-b117-4ba1-8367-7bbe0b209ce5/move");
 $data = ['direction' => $move];
 $json = json_encode($data);
 
