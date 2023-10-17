@@ -16,45 +16,44 @@ class BOT
     // do {
     //   $datas = self::getData();
     //   if ($datas['isStarted']) {
+    //     $countMove = 0;
     //     do {
-    //       $coin_lists = [];
-    //       $bot_position = [];
-    //       $enemies_position = [];
-    //       $base = "";
-    //       $datas = self::getData();
+    //        $coin_lists = [];
+    //           $enemies_position = [];
+    //           $datas = self::getData();
 
-    //       [$coin_lists, $bot_position, $base, $enemies_position] = self::getObjectPosition($datas['gameObjects']);
-    //       $target = self::caculateTarget($bot_position, $coin_lists);
-    //       if (!empty($base)) {
-    //         $target = implode(",", $base);
-    //       }
+    //           [$coin_lists, $bot, $enemies_position] = self::getObjectPosition($datas['gameObjects']);
+    //           $target = self::caculateTarget($bot['position'], $coin_lists);
+    //           if (self::returnBase($bot, $target) || in_array($countMove, [3,4,5,6,7])) {
+    //             $target = implode(",", $bot['properties']['base']);
+    //           }
 
-    //       $move = self::caculateMove($bot_position, $target);
-    //       if (!self::enemyNearBy($enemies_position, $bot_position)) {
-    //         self::move($move);
-    //       }
-    //       usleep(800 * 1000);
+    //           $move = self::caculateMove($bot['position'], $target);
+    //           if (!self::enemyNearBy($enemies_position, $bot['position'])) {
+    //             self::move($move);
+    //             $countMove ++;
+    //           }
+    //           usleep(800 * 1000);
     //     } while ($datas['isStarted']);
     //   }
-        // usleep(200 * 1000);
+    //     usleep(200 * 1000);
     // } while (!$datas['isStarted']);
-
+    $countMove = 0;
     do {
       $coin_lists = [];
-      $bot_position = [];
       $enemies_position = [];
-      $base = "";
       $datas = self::getData();
 
-      [$coin_lists, $bot_position, $base, $enemies_position] = self::getObjectPosition($datas['gameObjects']);
-      $target = self::caculateTarget($bot_position, $coin_lists);
-      if (!empty($base)) {
-        $target = implode(",", $base);
+      [$coin_lists, $bot, $enemies_position] = self::getObjectPosition($datas['gameObjects']);
+      $target = self::caculateTarget($bot['position'], $coin_lists);
+      if (self::returnBase($bot, $target) || in_array($countMove, [3,4,5,6,7])) {
+        $target = implode(",", $bot['properties']['base']);
       }
 
-      $move = self::caculateMove($bot_position, $target);
-      if (!self::enemyNearBy($enemies_position, $bot_position)) {
+      $move = self::caculateMove($bot['position'], $target);
+      if (!self::enemyNearBy($enemies_position, $bot['position'])) {
         self::move($move);
+        $countMove ++;
       }
       usleep(800 * 1000);
     } while (true);
@@ -114,12 +113,12 @@ class BOT
         $enemies[] = $object;
         $coins[] = $object;
       }
+      if($object['type'] == "ResetButtonGameObject"){
+        $coins[] = $object;
+      }
     }
     if ($bot) {
       $current_point = $bot['properties']['coins'];
-      if ($current_point == $bot['properties']['inventorySize']) {
-        $base = $bot['properties']['base'];
-      }
       foreach ($coins as $coin) {
         if ($coin['type'] == 'CoinGameObject') {
           if ($coin['properties']['points'] + $current_point > $bot['properties']['inventorySize']) {
@@ -135,7 +134,7 @@ class BOT
       $enemies_position[] = $enemy['position'];
     }
 
-    return [$coins_position, $bot['position'], $base, $enemies_position];
+    return [$coins_position, $bot, $enemies_position];
   }
   function caculateTarget($bot_position, $coin_lists)
   {
@@ -208,5 +207,21 @@ class BOT
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
     curl_close($ch);
+  }
+  function returnBase($bot, $target)
+  {
+    if ($bot['properties']['coins'] == 5) {
+      return true;
+    }
+    $botX = $bot['position']['x'];
+    $botY = $bot['position']['y'];
+    $baseX = $bot['properties']['base']['x'];
+    $baseY = $bot['properties']['base']['y'];
+    $target = explode(",", $target);
+    if ($bot['properties']['coins'] >= 3 && self::caculateDistance($botX, $botY, $target[0], $target[1]) > self::caculateDistance($botX, $botY, $baseX, $baseY))
+    {
+      return true;
+    }
+    return false;
   }
 }
